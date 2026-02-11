@@ -1,0 +1,158 @@
+-- mod-version:3
+local boilerplate_utils = require 'plugins.boilerplate_utils'
+
+
+-- FILE FILL
+local file_fill_package_path = ""
+
+
+-- BOILERPLATE
+-- __THIS__ is a list of items to be constructed in the plugin's logic
+-- __REFERENCE_ATTR_IN_METHOD__ is the name adjusted as per camelCase convention
+-- __REFERENCE_ATTR__ is the original attribute name
+local boilerplate_constructor = [[
+public __REFERENCE_ATTR__ {
+  __THIS__
+}
+]]
+local boilerplate_getter = [[
+public String get__REFERENCE_ATTR_IN_METHOD__() {
+  return __REFERENCE_ATTR__;
+}
+]]
+local boilerplate_setter = [[
+public void set__REFERENCE_ATTR_IN_METHOD__(String __REFERENCE_ATTR__) {
+    this.__REFERENCE_ATTR__ = __REFERENCE_ATTR__;
+  }
+]]
+
+
+-- WRAP
+-- __CODE__ is the selected code to be wrapped
+local wrap_try = [[
+try () {
+  __CODE__
+}
+]]
+local wrap_try_catch = [[
+try () {
+  __CODE__
+} catch () {
+  
+}
+]]
+local wrap_try_catch_finally = [[
+try () {
+  __CODE__
+} catch () {
+  
+} finally {
+  
+}
+]]
+
+
+-- DOCS
+-- __DOC__ is ?
+local docs_package = [[
+
+]]
+local docs_class = [[
+
+]]
+local docs_interface = [[
+
+]]
+local docs_enum = [[
+
+]]
+local docs_attribute = [[
+
+]]
+local docs_method = [[
+
+]]
+
+
+-- TODO: COMPONENTS
+
+
+-- Init
+boilerplate_utils.add_module() {
+  name = "java",
+  desc = "",
+  file_extensions = { ".java" },
+  file_fills = {
+    {
+      type = "package_path",
+      content = file_fill_package_path
+    }
+  },
+  boilerplate = {
+    {
+      type = "constructor",
+      -- '{' is the anchor match, 1 is the number of lines to jump above the anchor before it starts pasting code
+      anchor = { "{", 1 },
+      content = boilerplate_constructor
+    },
+    {
+      type = "getter",
+      anchor = { "}", 2 },
+      content = boilerplate_getter
+    },
+    {
+      type = "setter",
+      anchor = { "}", 2 },
+      content = boilerplate_setter
+    }
+  },
+  wrap = {
+    {
+      name = "try",
+      content = wrap_try
+    },
+    {
+      name = "try_catch",
+      content = wrap_try_catch
+    },
+    {
+      name = "try_catch_finally",
+      content = wrap_try_catch_finally
+    },
+  },
+  docs = {
+    {
+      type = "package",
+      content = docs_package
+    },
+    {
+      type = "class",
+      content = docs_class
+    },
+    {
+      type = "interface",
+      content = docs_interface
+    },
+    {
+      type = "enum",
+      content = docs_enum
+    },
+    {
+      type = "attribute",
+      content = docs_attribute
+    },
+    {
+      type = "method",
+      content = docs_method
+    },
+  },
+  components = {
+    -- ?: Entity + EntityDAO + EntityService + EntityController
+    -- ?: Entity + EntityDTO + EntityJpaRepository + EntityService + EntityController
+  },
+  properties = {
+    ["root_package_path"] = {
+      "src/main/java/"
+    }
+  }
+}

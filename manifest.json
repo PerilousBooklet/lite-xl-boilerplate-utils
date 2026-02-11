@@ -1,0 +1,11 @@
+{
+  "addons": [
+    {
+      "id": "boilerplate_utils",
+      "version": "0.0.1",
+      "description": "A plugin to generate boilerplate.",
+      "path": ".",
+      "mod_version": "3"
+    }
+  ]
+}

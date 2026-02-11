@@ -2,6 +2,9 @@
 
 A simple plugin that generates boilerplate for programming languages.
 
+> [!NOTE]
+> This plugin is heavily WIP, not even in alpha state!
+
 ## Features
 
 TODO: features

@@ -9,15 +9,133 @@ local DocView = require "core.docview"
 local fsutils = require "plugins.boilerplate_utils.fsutils"
 
 
+-----------------------------------------
+-- NOTES ON MANIPULATING SELECTED TEXT --
+-----------------------------------------
+
+-- local current_docview = get_active_docview()
+
+-- 1. Print some Doc data
+-- core.log(common.serialize(current_docview.doc.lines)) -- Print lines
+-- core.log(current_docview.doc.filename) -- Print filename
+-- core.log(current_docview.doc.abs_filename) -- Print absolute filename
+
+-- 2.1. Move caret to new position
+-- local x, y = current_docview.doc:position_offset(1, 2, 2, 3) -- Calculate new position for caret
+-- current_docview.doc:set_selection(x, y) -- Move the caret to new position
+
+-- 2.2. Set selection
+-- current_docview.doc:set_selection(1, 1, 1, 10) -- Select from (1,1) to (1,10)
+
+-- 3. Replace tag with text
+-- single-line string
+-- local text = current_docview.doc:get_text(1,1,10,10) -- Gets text between 1,1 and 10,10 (row,col)
+-- core.log(common.serialize(text))
+-- current_docview.doc:text_input("Hello there!")
+-- current_docview.doc:insert(1, 1, "\n" .. textt .. "\n")
+
+-- 4. Get selection and replace it with text
+-- local line1, col1, line2, col2 = current_docview.doc:get_selection()
+-- if line1 ~= line2 or col1 ~= col2 then
+--   local selected_text = current_docview.doc:get_text(line1, col1, line2, col2)
+--   core.log("Selected text: " .. selected_text)
+--   current_docview.doc:remove(line1, col1, line2, col2)
+--   -- current_docview.doc:insert(line1, col1, "REPLACED TEXT HERE")
+--   current_docview.doc:insert(line1, col1, textt)
+-- else
+--   core.log("No text selected, just a cursor position")
+-- end
+
+-- 5. same, multiple selections, handle at the same time
+-- if current_docview.doc:has_any_selection() then
+--   current_docview.doc:replace(function(text)
+--     core.log("Replacing: " .. text)
+--     return textt
+--   end)
+-- else
+--   core.log("No selections found")
+-- end
+
+-- 6. same, multiple selections, handle one at a time
+-- NOTE: use this to wrap for try-catch...
+-- local selections = {}
+-- for idx, line1, col1, line2, col2 in current_docview.doc:get_selections(true) do -- Collect all selections first
+--   if line1 ~= line2 or col1 ~= col2 then
+--     local text = current_docview.doc:get_text(line1, col1, line2, col2)
+--     table.insert(selections, {
+--       idx = idx,
+--       line1 = line1, col1 = col1,
+--       line2 = line2, col2 = col2,
+--       text = text
+--     })
+--   end
+-- end
+-- for i = #selections, 1, -1 do -- Process each selection (process in reverse to maintain positions)
+--   local sel = selections[i]
+--   core.log("Selection " .. sel.idx .. ": " .. sel.text)
+--   -- Replace with your custom text
+--   local replacement = "<<" .. sel.text:upper() .. ">>"  -- Example: wrap in brackets and uppercase
+--   current_docview.doc:remove(sel.line1, sel.col1, sel.line2, sel.col2)
+--   current_docview.doc:insert(sel.line1, sel.col1, replacement)
+-- end
+
+-- 7. Get selected text and replace pattern within with some text
+-- local tag7 = "ELSE"
+-- local replacement7 = "REPLACED TEXT HERE"
+-- local line1, col1, line2, col2 = current_docview.doc:get_selection()
+-- if line1 ~= line2 or col1 ~= col2 then -- Check that selection is 1. multi-line string or 2. is not empty
+--   local selected_text = current_docview.doc:get_text(line1, col1, line2, col2)
+--   core.log("Selected text: " .. selected_text)
+--   if string.find(selected_text, tag7) then
+--     current_docview.doc:remove(line1, col1, line2, col2)
+--     local new_text = string.gsub(selected_text, tag7, replacement7)
+--     current_docview.doc:insert(line1, col1, new_text)
+--   end
+-- else
+--   core.log("No text selected, just a cursor position")
+-- end
+
+-- 8. Get selected text with matched string and add some text above it
+-- local tag8 = "ELSE"
+-- local line1, col1, line2, col2 = current_docview.doc:get_selection()
+-- if line1 ~= line2 or col1 ~= col2 then -- Check that selection is 1. multi-line string or 2. is not empty
+--   local selected_text = current_docview.doc:get_text(line1, col1, line2, col2)
+--   core.log("Selected text: " .. selected_text)
+--   local indent = current_docview.doc.lines[line1]:match("^%s*") or ""
+--   if string.find(selected_text, tag8) then
+--     current_docview.doc:remove(line1, col1, line2, col2)
+--     core.log(common.serialize(selected_text))
+--     local new_text = string.gsub(selected_text, tag8, "REPLACED TEXT HERE")
+--     -- By adding indent before new_text I can just select the text and not also the indentation!
+--     local modified_text = ""
+--     if indent == "" or selected_text:match("^%s*") == "" then
+--       modified_text = "-- This is the string above the selection" .. "\n" ..
+--                       indent .. new_text
+--     else
+--       modified_text = indent .. "-- This is the string above the selection" .. "\n" ..
+--                       new_text
+--     end
+--     current_docview.doc:insert(line1, col1, modified_text)
+--   end
+-- else
+--   core.log("No text selected, just a cursor position")
+-- end
+
+-- 9. Get selected text with matched string and add some text beneath it:
+-- same as above but the "\n" goes after the new_text and before the beneath_text
+-- NOTE: for wrapping code blocks, add one more level of indentation to all lines
+
+
 -------
 -- ? --
 -------
 
 local boilerplate_utils = {}
 local modules = {}
+
+-- TODO: how does the treeview context menu work?
 local treeview_menu = TreeView.contextmenu
--- TODO: how does it work?
-local docview_menu_found, docview_menu = pcall(require, "plugins.contextmenu")
+-- local docview_menu_found, docview_menu = pcall(require, "plugins.contextmenu")
 
 
 ---------------------------
@@ -33,7 +151,6 @@ config.plugins.boilerplate_utils = common.merge({
 -- Utility functions --
 -----------------------
 
--- ?
 local function get_active_docview()
   local av = core.active_view
   if getmetatable(av) == DocView and av.doc and av.doc.filename then
@@ -47,35 +164,12 @@ end
 -- Data Storage --
 ------------------
 
--- ?
-local function matches_any(filename, patterns)
-	for _, pattern in ipairs(patterns) do
-		if string.find(filename, pattern) then
-			return true
-		end
-	end
-end
-
--- Return the first matching module
-local function get_module(module_name)
-	for _,v in pairs(modules) do
-		if module_name == v.name then
-			core.log("Found module: " .. module_name)
-			return v
-		end
-	end
-	core.log("Module : " .. module_name .. " is missing.")
-	return nil
-end
-
--- Add a module table to the modules table
 function boilerplate_utils.add_module()
-  return function(m)
-    table.insert(modules, m)
+	return function (t)
+    table.insert(modules, t)
   end
 end
 
--- Get list of template files
 local function parse_list()
 	local list = system.list_dir(USERDIR .. "/plugins/boilerplate_utils/modules")
   local list_matched = {}
@@ -87,14 +181,11 @@ local function parse_list()
   return list_matched
 end
 
--- Load modules
 function boilerplate_utils.load()
-  -- Get modules' filenames
   local modules_list = parse_list()
-  -- Load module files
   for _, v in ipairs(modules_list) do
     require("plugins.boilerplate_utils.modules." .. v)
-    core.log("Loaded boilerplate module: " .. v)
+    core.log("Loaded boilerplate_utils module: " .. v)
   end
 end
 
@@ -175,11 +266,11 @@ local function wrap_text(anchor, text, wrap_line_top, wrap_line_bottom)
 end
 
 local function create_folder(folder_path, folder_name)
-  -- copy from lite-lx-ptm
+  -- copy from lite-lx-boilerplate_utils
 end
 
 local function create_and_fill_file(file_path, file_name, file_content)
-  -- copy from lite-lx-ptm
+  -- copy from lite-lx-boilerplate_utils
 end
 
 
@@ -187,7 +278,8 @@ end
 -- Logic --
 -----------
 
--- TODO: add context menu items for each action (look at the treeview-extender plugin)
+-- TODO: add context menu items for each action
+--       (look at the treeview-extender plugin; add Generate->Constructor,Getter,Setter,Component,... and Refactor, works for a folder or a file)
 -- TODO: es. Java: use last } as anchor and paste new content 2 lines above it (check that above paste position there are 2 empty lines)
 -- TODO: check current file extension (commands must have context: current doc) and show options (defined in module) with commandview
 --       (es. getters, setters, getters and setters, toString, ...)
@@ -197,6 +289,7 @@ local function generate_boilerplate()
 	-- TODO: determine which module table to use
 	-- TODO: call generate_text_in_file()
 	-- TODO: open commandview...
+	-- TODO: if table type is "getter" or "setter", check for the boolean "is_oneliner"
 end
 
 -- TODO: Wrap code selection (context: current doc, command),
@@ -258,7 +351,7 @@ treeview_menu:register(
   {
     {
       text = "Test",
-      command = "boilerplate_utils:test-global"
+      command = "boilerplate:test-global"
     }
   }
 )
@@ -284,18 +377,18 @@ treeview_menu:register(
 
 -- Context: global
 command.add(nil,{ 
-  ["boilerplate_utils:test-global"] = test_global
+  ["boilerplate:test-global"] = test_global
 })
 
 -- Context: current docview
-command.add("core.docview", {
+command.add(get_active_docview(), {
   -- Test
-  ["boilerplate_utils:test-in-doc"] = test_in_doc,
+  ["boilerplate:test-in-doc"] = test_in_doc,
   -- Final
-  ["boilerplate_utils:generate-boilerplate"] = generate_boilerplate,
-  ["boilerplate_utils:wrap-code-selection"] = wrap_code_selection,
-  ["boilerplate_utils:generate-doc-comment"] = generate_doc_comment,
-  ["boilerplate_utils:generate-doc-comments"] = generate_doc_comments
+  ["boilerplate:generate-boilerplate"] = generate_boilerplate,
+  ["boilerplate:wrap-code-selection"] = wrap_code_selection,
+  ["boilerplate:generate-doc-comment"] = generate_doc_comment,
+  ["boilerplate:generate-doc-comments"] = generate_doc_comments
 })
 
 -- Context: treeview's context menu
@@ -304,9 +397,9 @@ command.add(
     return TreeView.hovered_item and fsutils.is_dir(TreeView.hovered_item.abs_filename) ~= true
   end, {
     -- Test
-    ["boilerplate_utils:test"] = test,
+    ["boilerplate:test"] = test,
     -- Final
-    ["boilerplate_utils:generate_component"] = generate_component
+    ["boilerplate:generate_component"] = generate_component
   }
 )
 
@@ -314,5 +407,7 @@ command.add(
 -------
 -- ? --
 -------
+
+core.add_thread(function() boilerplate_utils.load() end)
 
 return boilerplate_utils

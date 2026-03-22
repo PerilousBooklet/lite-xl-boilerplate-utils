@@ -97,11 +97,13 @@ boilerplate_utils.add_module() {
     },
     {
       type = "getter",
+      is_oneliner = true,
       anchor = { "}", 2 },
       content = boilerplate_getter
     },
     {
       type = "setter",
+      is_oneliner = false,
       anchor = { "}", 2 },
       content = boilerplate_setter
     }
@@ -149,6 +151,7 @@ boilerplate_utils.add_module() {
   components = {
     -- ?: Entity + EntityDAO + EntityService + EntityController
     -- ?: Entity + EntityDTO + EntityJpaRepository + EntityService + EntityController
+    -- es. x lavoro: Endpoint + J + M + R classes
   },
   properties = {
     ["root_package_path"] = {

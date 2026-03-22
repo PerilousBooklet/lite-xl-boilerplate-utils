@@ -13,6 +13,8 @@ TODO: features
 
 TODO: docs
 
+write here naming conventions for replacement tags used in template strings in the module template files
+
 ## Credits
 
 TODO: credits
